@@ -1,0 +1,74 @@
+﻿@using SystemeSolaireNet8.Data;
+@using SystemeSolaireNet8.Data.Entity
+@using Microsoft.AspNetCore.Components.QuickGrid
+@inherits SpaceBase
+@inject SystemeSolaireNet8.Data.Service.SolarSystemService SolarSystemService
+
+<style>
+  /* Ensure all the flags are the same size, and centered */
+  .flag {
+    width: 2rem;
+    height: 1.5rem;
+    margin: auto;
+  }
+
+  /* Assign default width to country name column */
+  ::deep thead .country-name {
+    width: 15rem;
+  }
+
+  /* Stop country name text from wrapping, and truncate with ellipsis */
+  ::deep tbody .country-name {
+    white-space: nowrap;
+    overflow: hidden;
+    max-width: 0;
+    text-overflow: ellipsis;
+  }
+
+  /* Stop the last page from collapsing to the number of rows on it */
+  ::deep tr {
+    height: 1.8rem;
+  }
+
+    /* Subtle stripe effect */
+    ::deep tr:nth-child(even) {
+      background: rgba(255,255,255,0.4);
+    }
+
+  /* Magnifying glass */
+  ::deep .country-name .col-options-button {
+    background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"> <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /> </svg>');
+  }
+</style>
+
+<div class="grid">
+  <QuickGrid Items="@FilteredItems" Pagination="@pagination">
+    <TemplateColumn Title="Rank" SortBy="@rankSort" Align="Align.Center" InitialSortDirection="SortDirection.Ascending" IsDefaultSortColumn="true">
+      <img class="space" src="images/@(context.bodyType).jpg" width="50" height="50"/>
+    </TemplateColumn>
+    <PropertyColumn Title="Name" Property="@(p => p.name)" Sortable="true" Class="planet-name">
+      <ColumnOptions>
+        <div class="search-box">
+          <input type="search" autofocus @bind="nameSearch" @bind:event="oninput" placeholder="Nom ..." />
+        </div>
+      </ColumnOptions>
+    </PropertyColumn>
+    <PropertyColumn Title="Density" Property="@(p => p.density)" />
+    <PropertyColumn Title="Mean Radius" Property="@(p => p.meanRadius)" />
+    <PropertyColumn Title="Body type" Property="@(p => p.bodyType)" />
+    <TemplateColumn><a href="/galaxy/@context.id">Détails</a></TemplateColumn>
+  </QuickGrid>
+</div>
+
+<Paginator State="@pagination" />
+
+@code {
+  PaginationState pagination = new PaginationState { ItemsPerPage = 15 };
+  string nameSearch = string.Empty;
+
+  GridSort<SpaceEntity> rankSort = GridSort<SpaceEntity>
+      .ByDescending(x => x.meanRadius)
+      .ThenDescending(x => x.density);
+
+  IQueryable<SpaceEntity>? FilteredItems => SpaceEntities?.Where(x => x.name.Contains(nameSearch, StringComparison.CurrentCultureIgnoreCase));
+}

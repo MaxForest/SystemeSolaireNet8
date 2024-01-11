@@ -1,0 +1,32 @@
+﻿@page "/"
+@using SystemeSolaireNet8.Data
+@using SystemeSolaireNet8.Pages;
+@using SystemeSolaireNet8.Data.Entity
+
+@inherits GalaxyComponent
+@attribute [StreamRendering]
+
+<PageTitle>Système Solaire</PageTitle>
+<h1>Système Solaire</h1>
+
+<form class="search" data-enhance>
+  <input name="query" placeholder="Search..." value="@Query" />
+  <button title="Search" class="ms-Icon ms-Icon--Search"></button>
+</form>
+@if (spaceEntities == null)
+{
+  <p><em>Chargement en cours...</em></p>
+}
+else
+{
+    <ul class="space-list">
+    @foreach (var spaceEntity in spaceEntities)
+    {
+        <li class="space-list-item">
+            <a href="galaxy/@spaceEntity.id">
+                <SpaceCard SpaceEntity="spaceEntity" />
+            </a>
+        </li>
+    }
+    </ul>
+}

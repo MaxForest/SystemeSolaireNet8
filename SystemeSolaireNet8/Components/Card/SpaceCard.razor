@@ -1,0 +1,13 @@
+﻿@using SystemeSolaireNet8.Data.Entity
+<div class="space-card">
+    <img src=@($"/images/{SpaceEntity.bodyType}.jpg") />
+  <div class="space-card-body">
+    <h2 class="space-card-name">@SpaceEntity.name</h2>
+    <h3 class="space-card-source">@SpaceEntity.discoveredBy</h3>
+    </div>
+</div>
+
+@code {
+    [Parameter, EditorRequired]
+    public SpaceEntity SpaceEntity { get; set; } = default!;
+}

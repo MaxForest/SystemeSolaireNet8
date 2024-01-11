@@ -1,0 +1,20 @@
+﻿@page "/virtualize"
+@using SystemeSolaireNet8.Data
+@using SystemeSolaireNet8.Pages;
+
+@inherits VirtualizeGalaxyComponent
+
+@rendermode @(new InteractiveServerRenderMode(prerender: false))
+@attribute [StreamRendering]
+
+<PageTitle>Système Solaire</PageTitle>
+<h1>QuickGrid Virtualize</h1>
+
+@if (spaceEntities == null)
+{
+  <p><em>Chargement en cours...</em></p>
+}
+else
+{
+  <VirtualizeSpaceTable SpaceEntities="spaceEntities" />
+}

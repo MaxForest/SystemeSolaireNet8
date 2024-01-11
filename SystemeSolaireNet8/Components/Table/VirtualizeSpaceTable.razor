@@ -1,0 +1,91 @@
+﻿@using SystemeSolaireNet8.Data;
+@using SystemeSolaireNet8.Data.Entity
+@using Microsoft.AspNetCore.Components.QuickGrid
+@inherits SpaceBase
+@inject SystemeSolaireNet8.Data.Service.SolarSystemService SolarSystemService
+
+<style>
+  /* Fix height and enable scrolling */
+  .grid {
+    height: 25rem;
+    overflow-y: auto;
+  }
+
+    .grid ::deep table {
+      min-width: 100%;
+    }
+
+  /* Sticky header while scrolling */
+  ::deep thead {
+    position: sticky;
+    top: 0;
+    background-color: #d8d8d8;
+    outline: 1px solid gray;
+    z-index: 1;
+  }
+
+  /* For virtualized grids, it's essential that all rows have the same known height */
+  ::deep tr {
+    height: 30px;
+    border-bottom: 0.5px solid silver;
+  }
+
+  ::deep tbody td {
+    white-space: nowrap;
+    overflow: hidden;
+    max-width: 0;
+    text-overflow: ellipsis;
+  }
+</style>
+
+<div class="grid" tabindex="-1">
+  <QuickGrid ItemsProvider="@itemsProvider" Virtualize="true" @ref="grid">
+@*     <TemplateColumn>
+      <img src=@($"/images/{context.bodyType}.jpg") width="50" height="50" />
+    </TemplateColumn> *@
+    <PropertyColumn Title="Name" Property="@(p => p.name)" Sortable="true" Class="planet-name">
+      <ColumnOptions>
+        <div class="search-box">
+          <input type="search" autofocus @bind="nameSearch" @bind:event="oninput" placeholder="Nom ..." />
+        </div>
+      </ColumnOptions>
+    </PropertyColumn>
+    <PropertyColumn Title="Density" Property="@(p => p.density)" />
+    <PropertyColumn Title="Mean Radius" Property="@(p => p.meanRadius)" />
+    <PropertyColumn Title="Body type" Property="@(p => p.bodyType)" />
+    <TemplateColumn><a href="/galaxy/@context.id">Détails</a></TemplateColumn>
+  </QuickGrid>
+</div>
+
+<div class="my-2">
+  <div class="search-box inline-block mr-4 my-1">
+    <input type="search" autofocus @bind="nameSearch" @bind:event="oninput" @bind:after="()=>grid.RefreshDataAsync()" placeholder="Product name..." />
+  </div>
+  <div class="inline-block my-1">
+    Total: <strong>@numResults results found</strong>
+  </div>
+</div>
+
+@code {
+  QuickGrid<SpaceEntity>? grid;
+  GridItemsProvider<SpaceEntity>? itemsProvider;
+  int numResults;
+  string? nameSearch;
+
+  protected override void OnInitialized()
+  {
+    itemsProvider = async request =>
+    {
+      GridItemsProviderResult<SpaceEntity> result = await GetBodies(request, nameSearch);
+
+      // Separately display the item count
+      if (result.TotalItemCount != numResults && !request.CancellationToken.IsCancellationRequested)
+      {
+        numResults = result.TotalItemCount;
+        StateHasChanged();
+      }
+
+      return result;
+    };
+  }
+}

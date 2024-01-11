@@ -1,0 +1,20 @@
+﻿@page "/paged"
+@using SystemeSolaireNet8.Data
+@using SystemeSolaireNet8.Pages;
+
+@inherits PagedGalaxyComponent
+
+@rendermode @(new InteractiveServerRenderMode(prerender: false))
+@attribute [StreamRendering]
+
+<PageTitle>Système Solaire</PageTitle>
+<h1>QuickGrid Pagination</h1>
+
+@if (spaceEntities == null)
+{
+  <p><em>Chargement en cours...</em></p>
+}
+else
+{
+  <PagedSpaceTable SpaceEntities="spaceEntities" />
+}
