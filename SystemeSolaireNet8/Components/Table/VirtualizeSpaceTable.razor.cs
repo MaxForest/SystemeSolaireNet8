@@ -1,39 +1,67 @@
 ﻿using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.QuickGrid;
-using Newtonsoft.Json;
-using System.Runtime.InteropServices;
-using SystemeSolaireNet8.Data.Entity;
+using SolarSystemN9.Data.Entity;
 
-namespace SystemeSolaireNet8.Components.Table
+namespace SolarSystemN9.Components.Table;
+
+public partial class VirtualizeSpaceTable : ComponentBase
 {
-    public class SpaceBase : ComponentBase
-  {
+    private QuickGrid<Bodies>? grid;
+    private GridItemsProvider<Bodies>? itemsProvider;
+    private int numResults;
+    private string? nameSearch;
+    private CancellationTokenSource? debounceCts;
+
     [Parameter]
-    public required IQueryable<SpaceEntity> SpaceEntities { get; set; }
+    public IQueryable<Bodies>? SpaceEntities { get; set; }
 
-    public async Task<GridItemsProviderResult<SpaceEntity>> GetBodies(GridItemsProviderRequest<SpaceEntity> request, string? nameSearch)
+    protected override void OnInitialized()
     {
-      var bodies = SpaceEntities;
-
-      if (!string.IsNullOrEmpty(nameSearch))
-      {
-        bodies = bodies.Where(x => x.name.Contains(nameSearch));
-      }
-
-      bodies =  bodies.OrderBy(x => x.name)
-                      .Skip(request.StartIndex)
-                      .Take(request.Count ?? 20);
-      
-      if (bodies != null)
-      {
-        return new GridItemsProviderResult<SpaceEntity>()
+        itemsProvider = async request =>
         {
-          Items = bodies.ToArray(),
-          TotalItemCount = SpaceEntities.Count()
-        };
-      }
+            GridItemsProviderResult<Bodies> result = await Task.Run(() => GetBodies(request, nameSearch));
 
-      throw new Exception();
+            if (result.TotalItemCount != numResults && !request.CancellationToken.IsCancellationRequested)
+            {
+                numResults = result.TotalItemCount;
+                StateHasChanged();
+            }
+
+            return result;
+        };
     }
-  }
+
+    private void DebounceSearch(ChangeEventArgs e)
+    {
+        debounceCts?.Cancel();
+        debounceCts = new CancellationTokenSource();
+
+        _ = Task.Delay(500, debounceCts.Token).ContinueWith(async task =>
+        {
+            if (!task.IsCanceled && grid != null)
+            {
+                await InvokeAsync(() => grid.RefreshDataAsync());
+            }
+        });
+    }
+
+    public GridItemsProviderResult<Bodies> GetBodies(GridItemsProviderRequest<Bodies> request, string? nameSearch)
+    {
+        IQueryable<Bodies>? bodies = SpaceEntities;
+
+        if (!string.IsNullOrEmpty(nameSearch))
+        {
+            bodies = bodies?.Where(x => !string.IsNullOrEmpty(x.Name) && x.Name.Contains(nameSearch));
+        }
+
+        bodies = bodies?.OrderBy(x => x.Name)
+                        .Skip(request.StartIndex)
+                        .Take(request.Count ?? 20);
+
+        return new GridItemsProviderResult<Bodies>
+        {
+            Items = bodies?.ToList() ?? [],
+            TotalItemCount = SpaceEntities?.Count() ?? 0
+        };
+    }
 }

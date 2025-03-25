@@ -1,18 +1,11 @@
 ﻿@page "/galaxy/{id}"
 @using System.Reflection;
-@using SystemeSolaireNet8.Data.Entity;
-@using SystemeSolaireNet8.Pages;
-
-@inherits DetailsComponent
-
-@implements IAsyncDisposable
-@inject IJSRuntime JS
-
-@* Might render twice *@
-@* @rendermode RenderMode.InteractiveServer *@
-
-@* Might render twice *@
-@* @rendermode @(new InteractiveServerRenderMode(prerender: true)) *@
+@using SolarSystemN9
+@using SolarSystemN9.Client
+@using SolarSystemN9.Components
+@using SolarSystemN9.Components.Card
+@using SolarSystemN9.Components.Table
+@using SolarSystemN9.Data.Entity
 
 @* Will render once *@
 @rendermode @(new InteractiveServerRenderMode(prerender: false))
@@ -29,10 +22,10 @@ else
     <PageTitle>@SpaceEntity</PageTitle>
     <h1>@SpaceEntity</h1>
 
-    @if (SpaceEntity.aroundPlanet != null)
+    @if (SpaceEntity.AroundPlanet != null)
     {
         <div>
-            <p>Autour de <a href=@($"/galaxy/{SpaceEntity.aroundPlanet.id}")>@SpaceEntity.aroundPlanet</a></p>
+            <p>Autour de <a href=@($"/galaxy/{SpaceEntity.AroundPlanet.Id}")>@SpaceEntity.AroundPlanet</a></p>
         </div>
     }
 
@@ -44,54 +37,26 @@ else
             </tr>
         </thead>
         <tbody>
-        @foreach (PropertyInfo prop in SpaceEntity.GetType().GetProperties())
-        {
-            <tr>
-                <td>@prop.Name</td>
-                <td>@prop.GetValue(SpaceEntity)</td>
-            </tr>
+        @if (spaceEntityProperties is not null) {
+            @foreach (PropertyInfo prop in spaceEntityProperties)
+            {
+                <tr>
+                    <td>@prop.Name</td>
+                    <td>@prop.GetValue(SpaceEntity)</td>
+                </tr>
+            }
         }
         </tbody>
     </table>
-    @if (SpaceEntity.moons?.Any() ?? false)
+
+    @if (SpaceEntity.Moons?.Any() ?? false)
     {
         <div>
             <h1>Lunes</h1>
-            <PagedSpaceTable SpaceEntities="SpaceEntity.moons.AsQueryable()" />
+            <PagedSpaceTable Items="SpaceEntity.Moons.AsQueryable()" />
         </div>
     }
+
     <h1>Schema</h1>
     <canvas id="canvas" width="400" height="400"></canvas>
-}
-
-@code {
-  private IJSObjectReference? jsModule;
-
-  protected override async Task OnAfterRenderAsync(bool firstRender)
-  {
-    if (firstRender)
-    {
-      jsModule = await JS.InvokeAsync<IJSObjectReference>("import", "./Components/Pages/Details.razor.js");
-    }
-
-    if(jsModule is not null && SpaceEntity is not null)
-    {
-      double pow = Math.Pow(10, 6);
-      double semiminor = (SpaceEntity.semimajorAxis * Math.Sqrt(1 - Math.Cbrt((double)SpaceEntity.eccentricity))) / pow;
-      double semimajor = SpaceEntity.semimajorAxis / pow;
-
-      double aphelion = SpaceEntity.aphelion / pow;
-      double perihelion = SpaceEntity.perihelion / pow;
-
-      await jsModule.InvokeVoidAsync("ellipse", 200, 200, semiminor, semimajor, Math.PI / 2, 0, 2 * Math.PI);
-    }
-  }
-
-  async ValueTask IAsyncDisposable.DisposeAsync()
-  {
-    if (jsModule is not null)
-    {
-      await jsModule.DisposeAsync();
-    }
-  }
 }

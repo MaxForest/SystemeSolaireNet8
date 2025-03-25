@@ -1,17 +1,16 @@
-﻿namespace SystemeSolaireNet8.Data.Type
+﻿namespace SolarSystemN9.Data.Type;
+
+public class SpaceDictionary : Dictionary<string, decimal>
 {
-  public class SpaceDictionary : Dictionary<string, decimal>
-  {
     public override string ToString()
     {
-      string value = "{ ";
+        string value = "{ ";
 
-      foreach (var pair in this)
-      {
-        value += $" {pair.Key} : {pair.Value};";
-      }
+        foreach (KeyValuePair<string, decimal> pair in this)
+        {
+            value += $" {pair.Key} : {pair.Value};";
+        }
 
-      return value + " }";
+        return value + " }";
     }
-  }
 }

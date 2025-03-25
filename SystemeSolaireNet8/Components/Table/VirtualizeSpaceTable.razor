@@ -1,8 +1,12 @@
-﻿@using SystemeSolaireNet8.Data;
-@using SystemeSolaireNet8.Data.Entity
+﻿@using SolarSystemN9
+@using SolarSystemN9.Client
+@using SolarSystemN9.Components
+@using SolarSystemN9.Components.Card
+@using SolarSystemN9.Components.Table
+@using SolarSystemN9.Data
+@using SolarSystemN9.Data.Entity
 @using Microsoft.AspNetCore.Components.QuickGrid
-@inherits SpaceBase
-@inject SystemeSolaireNet8.Data.Service.SolarSystemService SolarSystemService
+@inject SolarSystemN9.Data.Service.SolarSystemService SolarSystemService
 
 <style>
   /* Fix height and enable scrolling */
@@ -11,9 +15,9 @@
     overflow-y: auto;
   }
 
-    .grid ::deep table {
-      min-width: 100%;
-    }
+  .grid ::deep table {
+    min-width: 100%;
+  }
 
   /* Sticky header while scrolling */
   ::deep thead {
@@ -40,52 +44,25 @@
 
 <div class="grid" tabindex="-1">
   <QuickGrid ItemsProvider="@itemsProvider" Virtualize="true" @ref="grid">
-@*     <TemplateColumn>
-      <img src=@($"/images/{context.bodyType}.jpg") width="50" height="50" />
-    </TemplateColumn> *@
-    <PropertyColumn Title="Name" Property="@(p => p.name)" Sortable="true" Class="planet-name">
+    <PropertyColumn Title="Name" Property="@(p => p.Name)" Sortable="true" Class="planet-name">
       <ColumnOptions>
         <div class="search-box">
-          <input type="search" autofocus @bind="nameSearch" @bind:event="oninput" placeholder="Nom ..." />
+          <input type="search" @bind="nameSearch" placeholder="Nom ..." @oninput="DebounceSearch" />
         </div>
       </ColumnOptions>
     </PropertyColumn>
-    <PropertyColumn Title="Density" Property="@(p => p.density)" />
-    <PropertyColumn Title="Mean Radius" Property="@(p => p.meanRadius)" />
-    <PropertyColumn Title="Body type" Property="@(p => p.bodyType)" />
-    <TemplateColumn><a href="/galaxy/@context.id">Détails</a></TemplateColumn>
+    <PropertyColumn Title="Density" Property="@(p => p.Density)" />
+    <PropertyColumn Title="Mean Radius" Property="@(p => p.MeanRadius)" />
+    <PropertyColumn Title="Body type" Property="@(p => p.BodyType)" />
+    <TemplateColumn><a href="/galaxy/@context.Id">Détails</a></TemplateColumn>
   </QuickGrid>
 </div>
 
 <div class="my-2">
   <div class="search-box inline-block mr-4 my-1">
-    <input type="search" autofocus @bind="nameSearch" @bind:event="oninput" @bind:after="()=>grid.RefreshDataAsync()" placeholder="Product name..." />
+    <input type="search" @bind="nameSearch" @oninput="DebounceSearch" placeholder="Product name..." />
   </div>
   <div class="inline-block my-1">
     Total: <strong>@numResults results found</strong>
   </div>
 </div>
-
-@code {
-  QuickGrid<SpaceEntity>? grid;
-  GridItemsProvider<SpaceEntity>? itemsProvider;
-  int numResults;
-  string? nameSearch;
-
-  protected override void OnInitialized()
-  {
-    itemsProvider = async request =>
-    {
-      GridItemsProviderResult<SpaceEntity> result = await GetBodies(request, nameSearch);
-
-      // Separately display the item count
-      if (result.TotalItemCount != numResults && !request.CancellationToken.IsCancellationRequested)
-      {
-        numResults = result.TotalItemCount;
-        StateHasChanged();
-      }
-
-      return result;
-    };
-  }
-}

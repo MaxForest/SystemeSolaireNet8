@@ -1,28 +1,29 @@
-using SystemeSolaireNet8.Components;
-using SystemeSolaireNet8.Data.Service;
+using SolarSystemN9.Components;
+using SolarSystemN9.Data.Service;
 
-var builder = WebApplication.CreateBuilder(args);
+WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 builder.Services.AddRazorComponents()
-    .AddInteractiveServerComponents()
-    .AddInteractiveWebAssemblyComponents();
+                .AddInteractiveServerComponents()
+                .AddInteractiveWebAssemblyComponents();
 
 builder.Services.AddSingleton<SolarSystemService>();
 builder.Services.AddMemoryCache();
+builder.Services.AddHttpClient();
 
-var app = builder.Build();
+WebApplication app = builder.Build();
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
-  app.UseWebAssemblyDebugging();
+    app.UseWebAssemblyDebugging();
 }
 else
 {
-  app.UseExceptionHandler("/Error", createScopeForErrors: true);
-  // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
-  app.UseHsts();
+    app.UseExceptionHandler("/Error", createScopeForErrors: true);
+    // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
+    app.UseHsts();
 }
 
 app.UseHttpsRedirection();
@@ -31,8 +32,7 @@ app.UseStaticFiles();
 app.UseAntiforgery();
 
 app.MapRazorComponents<App>()
-    .AddInteractiveServerRenderMode()
-    .AddInteractiveWebAssemblyRenderMode();
-    //.AddAdditionalAssemblies(typeof(Counter).Assembly);
+   .AddInteractiveServerRenderMode()
+   .AddInteractiveWebAssemblyRenderMode();
 
 app.Run();

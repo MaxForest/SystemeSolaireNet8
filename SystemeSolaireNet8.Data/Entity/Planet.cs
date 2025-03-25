@@ -1,9 +1,12 @@
-﻿namespace SystemeSolaireNet8.Data.Entity;
+﻿using Newtonsoft.Json;
 
-  public class Planet : SpaceEntity
-  {
-#nullable disable
-      public string planet { get; set; }
-      public string rel { get; set; }
-#nullable enable
-  }
+namespace SolarSystemN9.Data.Entity;
+
+public class Planet : Bodies
+{
+    [JsonProperty("planet")]
+    public new string? Name { get; set; }
+
+    [JsonProperty("rel")]
+    public string? Relationship { get; set; }
+}

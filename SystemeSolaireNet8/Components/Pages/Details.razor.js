@@ -37,7 +37,6 @@
     ctx.lineTo(x - radiusY, y);
     ctx.stroke();
 
-
     ctx.setLineDash([0, 0]);
 
     ctx.beginPath();

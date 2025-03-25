@@ -1,16 +1,24 @@
 ﻿using System.Runtime.Serialization;
 
-namespace SystemeSolaireNet8.Data.Enums;
+namespace SolarSystemN9.Data.Enums;
 
 public enum BodyType
 {
-  Star,
-  Planet,
+    [EnumMember(Value = "Star")]
+    Star,
 
-  [EnumMember(Value = "Dwarf Planet")]
-  DwarfPlanet,
+    [EnumMember(Value = "Planet")]
+    Planet,
 
-  Asteroid,
-  Comet,
-  Moon
+    [EnumMember(Value = "Dwarf Planet")]
+    DwarfPlanet,
+
+    [EnumMember(Value = "Asteroid")]
+    Asteroid,
+
+    [EnumMember(Value = "Comet")]
+    Comet,
+
+    [EnumMember(Value = "Moon")]
+    Moon
 }

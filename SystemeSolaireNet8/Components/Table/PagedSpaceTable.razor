@@ -1,8 +1,6 @@
-﻿@using SystemeSolaireNet8.Data;
-@using SystemeSolaireNet8.Data.Entity
+﻿@using SolarSystemN9.Data;
+@using SolarSystemN9.Data.Entity
 @using Microsoft.AspNetCore.Components.QuickGrid
-@inherits SpaceBase
-@inject SystemeSolaireNet8.Data.Service.SolarSystemService SolarSystemService
 
 <style>
   /* Ensure all the flags are the same size, and centered */
@@ -44,31 +42,21 @@
 <div class="grid">
   <QuickGrid Items="@FilteredItems" Pagination="@pagination">
     <TemplateColumn Title="Rank" SortBy="@rankSort" Align="Align.Center" InitialSortDirection="SortDirection.Ascending" IsDefaultSortColumn="true">
-      <img class="space" src="images/@(context.bodyType).jpg" width="50" height="50"/>
+      <img class="space" src="images/@(context.BodyType).svg" width="50" height="50"/>
     </TemplateColumn>
-    <PropertyColumn Title="Name" Property="@(p => p.name)" Sortable="true" Class="planet-name">
+    <PropertyColumn Title="Name" Property="@(p => p.Name)" Sortable="true" Class="planet-name">
       <ColumnOptions>
         <div class="search-box">
           <input type="search" autofocus @bind="nameSearch" @bind:event="oninput" placeholder="Nom ..." />
         </div>
       </ColumnOptions>
     </PropertyColumn>
-    <PropertyColumn Title="Density" Property="@(p => p.density)" />
-    <PropertyColumn Title="Mean Radius" Property="@(p => p.meanRadius)" />
-    <PropertyColumn Title="Body type" Property="@(p => p.bodyType)" />
-    <TemplateColumn><a href="/galaxy/@context.id">Détails</a></TemplateColumn>
+    <PropertyColumn Title="Density" Property="@(p => p.Density)" />
+    <PropertyColumn Title="Mean Radius" Property="@(p => p.MeanRadius)" />
+    <PropertyColumn Title="Body type" Property="@(p => p.BodyType)" />
+    <TemplateColumn><a href="/galaxy/@context.Id">Détails</a></TemplateColumn>
   </QuickGrid>
 </div>
 
 <Paginator State="@pagination" />
 
-@code {
-  PaginationState pagination = new PaginationState { ItemsPerPage = 15 };
-  string nameSearch = string.Empty;
-
-  GridSort<SpaceEntity> rankSort = GridSort<SpaceEntity>
-      .ByDescending(x => x.meanRadius)
-      .ThenDescending(x => x.density);
-
-  IQueryable<SpaceEntity>? FilteredItems => SpaceEntities?.Where(x => x.name.Contains(nameSearch, StringComparison.CurrentCultureIgnoreCase));
-}

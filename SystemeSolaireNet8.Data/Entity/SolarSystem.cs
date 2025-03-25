@@ -1,6 +1,6 @@
-﻿namespace SystemeSolaireNet8.Data.Entity;
+﻿namespace SolarSystemN9.Data.Entity;
 
-  public class SolarSystem
-  {
-      public SpaceEntity[]? Bodies { get; set; }
-  }
+public class SolarSystem
+{
+    public Bodies[]? Bodies { get; set; }
+}

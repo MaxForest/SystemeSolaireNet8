@@ -1,13 +1,14 @@
-﻿@using SystemeSolaireNet8.Data.Entity
+﻿@using SolarSystemN9
+@using SolarSystemN9.Client
+@using SolarSystemN9.Components
+@using SolarSystemN9.Components.Card
+@using SolarSystemN9.Components.Table
+@using SolarSystemN9.Data.Entity
 <div class="space-card">
-    <img src=@($"/images/{SpaceEntity.bodyType}.jpg") />
+    <img src=@($"/images/{Body.BodyType}.svg") />
   <div class="space-card-body">
-    <h2 class="space-card-name">@SpaceEntity.name</h2>
-    <h3 class="space-card-source">@SpaceEntity.discoveredBy</h3>
+    <h2 class="space-card-name">@Body.Name</h2>
+    <h3 class="space-card-source">@Body.DiscoveredBy</h3>
     </div>
 </div>
 
-@code {
-    [Parameter, EditorRequired]
-    public SpaceEntity SpaceEntity { get; set; } = default!;
-}

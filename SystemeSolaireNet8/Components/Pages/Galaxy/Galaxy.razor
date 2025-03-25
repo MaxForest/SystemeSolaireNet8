@@ -1,7 +1,11 @@
 ﻿@page "/"
-@using SystemeSolaireNet8.Data
-@using SystemeSolaireNet8.Pages;
-@using SystemeSolaireNet8.Data.Entity
+@using SolarSystemN9
+@using SolarSystemN9.Client
+@using SolarSystemN9.Components
+@using SolarSystemN9.Components.Card
+@using SolarSystemN9.Components.Table
+@using SolarSystemN9.Data
+@using SolarSystemN9.Data.Entity
 
 @inherits GalaxyComponent
 @attribute [StreamRendering]
@@ -23,8 +27,8 @@ else
     @foreach (var spaceEntity in spaceEntities)
     {
         <li class="space-list-item">
-            <a href="galaxy/@spaceEntity.id">
-                <SpaceCard SpaceEntity="spaceEntity" />
+            <a href="galaxy/@spaceEntity.Id">
+                <SpaceCard Body="spaceEntity" />
             </a>
         </li>
     }

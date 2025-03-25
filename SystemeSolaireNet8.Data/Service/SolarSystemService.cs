@@ -1,84 +1,102 @@
-using Microsoft.AspNetCore.Components.QuickGrid;
 using Microsoft.Extensions.Caching.Memory;
-using Newtonsoft.Json;
-using System.Reflection;
-using SystemeSolaireNet8.Data.Entity;
+using SolarSystemN9.Data.Entity;
+using System.Net.Http.Json;
 
-namespace SystemeSolaireNet8.Data.Service
+namespace SolarSystemN9.Data.Service;
+
+public class SolarSystemService(IMemoryCache memoryCache, IHttpClientFactory httpClientFactory)
 {
-  public class SolarSystemService(IMemoryCache memoryCache)
-  {
-    private readonly HttpClient client = new();
+    private const string BodiesApiEndpoint = "https://api.le-systeme-solaire.net/rest/bodies";
+    private readonly HttpClient _client = httpClientFactory.CreateClient();
 
-    private readonly IMemoryCache _memoryCache = memoryCache;
-
-    public async Task<IQueryable<SpaceEntity>?> GetBodies()
+    public async Task<IQueryable<Bodies>?> GetBodiesAsync()
     {
-      return await _memoryCache.GetOrCreateAsync("SolarSystem", async cache =>
-      {
-        HttpResponseMessage response = await client.GetAsync("https://api.le-systeme-solaire.net/rest/bodies/");
-        if (response.IsSuccessStatusCode)
+        try
         {
-          return JsonConvert.DeserializeObject<SolarSystem>(await response.Content.ReadAsStringAsync())?.Bodies?.AsQueryable();
-        }
-
-        throw new Exception();
-      });
-    }
-
-    public async Task<IQueryable<SpaceEntity>?> GetBodies(string query)
-    {
-      HttpResponseMessage response = await client.GetAsync($"https://api.le-systeme-solaire.net/rest/bodies?filter[]=name,cs,{query}");
-      if (response.IsSuccessStatusCode)
-      {
-        return JsonConvert.DeserializeObject<SolarSystem>(await response.Content.ReadAsStringAsync())?.Bodies?.AsQueryable();
-      }
-
-      throw new Exception();
-    }
-
-    public async Task<SpaceEntity?> GetEntity(string id)
-    {
-      return await _memoryCache.GetOrCreateAsync(id, async cache =>
-      {
-        HttpResponseMessage response = await client.GetAsync($"https://api.le-systeme-solaire.net/rest/bodies/{id}");
-
-        if (response.IsSuccessStatusCode)
-        {
-          SpaceEntity? spaceEntity = JsonConvert.DeserializeObject<SpaceEntity?>(await response.Content.ReadAsStringAsync());
-
-          if (spaceEntity?.moons?.Length > 0)
-          {
-            foreach (var moon in spaceEntity.moons.ToList().Select((x, i) => new { Value = x, Index = i }))
+            return await memoryCache.GetOrCreateAsync("SolarSystem", async cache =>
             {
-              response = await client.GetAsync(moon.Value.rel);
+                HttpResponseMessage response = await _client.GetAsync(BodiesApiEndpoint);
+                response.EnsureSuccessStatusCode();
 
-              if (response.IsSuccessStatusCode)
-              {
-                Moon? tmpMoon = JsonConvert.DeserializeObject<Moon>(await response.Content.ReadAsStringAsync());
+                SolarSystem? solarSystem = await response.Content.ReadFromJsonAsync<SolarSystem>();
+                return solarSystem?.Bodies?.AsQueryable();
+            });
+        }
+        catch (Exception)
+        {
+            // Log the exception (logging mechanism not shown here)
+            return null;
+        }
+    }
+
+    public async Task<IQueryable<Bodies>?> GetBodies(string query)
+    {
+        try
+        {
+            HttpResponseMessage response = await _client.GetAsync($"{BodiesApiEndpoint}?filter[]=name,cs,{query}");
+            response.EnsureSuccessStatusCode();
+
+            SolarSystem? solarSystem = await response.Content.ReadFromJsonAsync<SolarSystem>();
+            return solarSystem?.Bodies?.AsQueryable();
+        }
+        catch (Exception)
+        {
+            // Log the exception (logging mechanism not shown here)
+            return null;
+        }
+    }
+
+    public async Task<Bodies?> GetEntity(string id)
+    {
+        try
+        {
+            //return await memoryCache.GetOrCreateAsync(id, async cache =>
+            //{
+            HttpResponseMessage response = await _client.GetAsync($"{BodiesApiEndpoint}/{id}");
+            response.EnsureSuccessStatusCode();
+
+            Bodies? spaceEntity = await response.Content.ReadFromJsonAsync<Bodies>();
+            if (spaceEntity == null) return null;
+
+            await LoadMoons(spaceEntity);
+            //await LoadAroundPlanet(spaceEntity);
+
+            return spaceEntity;
+            //});
+        }
+        catch (Exception)
+        {
+            // Log the exception (logging mechanism not shown here)
+            return null;
+        }
+    }
+
+    private async Task LoadMoons(Bodies spaceEntity)
+    {
+        if (spaceEntity?.Moons?.Length > 0)
+        {
+            foreach (var moon in spaceEntity.Moons.ToList().Select((x, i) => new { Value = x, Index = i }))
+            {
+                HttpResponseMessage response = await _client.GetAsync($"{BodiesApiEndpoint}/{moon.Value.Relationship}");
+                response.EnsureSuccessStatusCode();
+
+                Moon? tmpMoon = await response.Content.ReadFromJsonAsync<Moon>();
                 if (tmpMoon != null)
                 {
-                  spaceEntity.moons[moon.Index] = tmpMoon;
+                    spaceEntity.Moons[moon.Index] = tmpMoon;
                 }
-              }
             }
-          }
-
-          if (spaceEntity?.aroundPlanet != null)
-          {
-            response = await client.GetAsync(spaceEntity.aroundPlanet.rel);
-
-            if (response.IsSuccessStatusCode)
-            {
-              spaceEntity.aroundPlanet = JsonConvert.DeserializeObject<Planet>(await response.Content.ReadAsStringAsync());
-            }
-          }
-
-          return spaceEntity;
         }
-
-        throw new Exception();
-      });
     }
-  }
+
+    private async Task LoadAroundPlanet(Bodies spaceEntity)
+    {
+        if (spaceEntity?.AroundPlanet != null)
+        {
+            HttpResponseMessage response = await _client.GetAsync($"{BodiesApiEndpoint}/{spaceEntity.AroundPlanet.Relationship}");
+            response.EnsureSuccessStatusCode();
+
+            spaceEntity.AroundPlanet = await response.Content.ReadFromJsonAsync<Planet>();
+        }
+    }
 }
