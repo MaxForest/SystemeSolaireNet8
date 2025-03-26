@@ -17,14 +17,14 @@
   <input name="query" placeholder="Search..." value="@Query" />
   <button title="Search" class="ms-Icon ms-Icon--Search"></button>
 </form>
-@if (spaceEntities == null)
+@if (CelestialBodies == null)
 {
   <p><em>Chargement en cours...</em></p>
 }
 else
 {
     <ul class="space-list">
-    @foreach (var spaceEntity in spaceEntities)
+    @foreach (var spaceEntity in CelestialBodies)
     {
         <li class="space-list-item">
             <a href="galaxy/@spaceEntity.Id">

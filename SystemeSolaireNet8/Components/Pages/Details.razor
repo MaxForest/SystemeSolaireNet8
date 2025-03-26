@@ -11,7 +11,7 @@
 @rendermode @(new InteractiveServerRenderMode(prerender: false))
 @attribute [StreamRendering]
 
-@if (SpaceEntity == null)
+@if (CelestialBody == null)
 {
     <PageTitle>Système Solaire</PageTitle>
     <h1>Système Solaire</h1>
@@ -19,13 +19,13 @@
 }
 else
 {
-    <PageTitle>@SpaceEntity</PageTitle>
-    <h1>@SpaceEntity</h1>
+    <PageTitle>@CelestialBody</PageTitle>
+    <h1>@CelestialBody</h1>
 
-    @if (SpaceEntity.AroundPlanet != null)
+    @if (CelestialBody.AroundPlanet != null)
     {
         <div>
-            <p>Autour de <a href=@($"/galaxy/{SpaceEntity.AroundPlanet.Id}")>@SpaceEntity.AroundPlanet</a></p>
+            <p>Autour de <a href=@($"/galaxy/{CelestialBody.AroundPlanet.Id}")>@CelestialBody.AroundPlanet</a></p>
         </div>
     }
 
@@ -37,23 +37,23 @@ else
             </tr>
         </thead>
         <tbody>
-        @if (spaceEntityProperties is not null) {
-            @foreach (PropertyInfo prop in spaceEntityProperties)
+        @if (celestialBodyProperties is not null) {
+            @foreach (PropertyInfo prop in celestialBodyProperties)
             {
                 <tr>
                     <td>@prop.Name</td>
-                    <td>@prop.GetValue(SpaceEntity)</td>
+                    <td>@prop.GetValue(CelestialBody)</td>
                 </tr>
             }
         }
         </tbody>
     </table>
 
-    @if (SpaceEntity.Moons?.Any() ?? false)
+    @if (CelestialBody.Moons?.Any() ?? false)
     {
         <div>
             <h1>Lunes</h1>
-            <PagedSpaceTable Items="SpaceEntity.Moons.AsQueryable()" />
+            <PagedSpaceTable CelestialBodies="CelestialBody.Moons.AsQueryable()" />
         </div>
     }
 

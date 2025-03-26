@@ -3,7 +3,7 @@ using SolarSystemN9.Data.Type;
 
 namespace SolarSystemN9.Data.Entity;
 
-public class Bodies
+public class CelestialBody
 {
     [JsonProperty("id")]
     public string? Id { get; set; }

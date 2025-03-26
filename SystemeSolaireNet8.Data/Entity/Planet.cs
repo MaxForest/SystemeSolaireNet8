@@ -2,11 +2,11 @@
 
 namespace SolarSystemN9.Data.Entity;
 
-public class Planet : Bodies
+public class Planet : CelestialBody
 {
-    [JsonProperty("planet")]
-    public new string? Name { get; set; }
+    //[JsonProperty("planet")]
+    public string? planet { get; set; }
 
-    [JsonProperty("rel")]
-    public string? Relationship { get; set; }
+    //[JsonProperty("rel")]
+    public string? rel { get; set; }
 }

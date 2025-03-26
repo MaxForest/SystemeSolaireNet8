@@ -12,11 +12,11 @@
 <PageTitle>Système Solaire</PageTitle>
 <h1>QuickGrid Pagination</h1>
 
-@if (spaceEntities == null)
+@if (CelestialBodies == null)
 {
   <p><em>Chargement en cours...</em></p>
 }
 else
 {
-    <PagedSpaceTable SpaceEntities="spaceEntities" />
+    <PagedSpaceTable CelestialBodies="CelestialBodies" />
 }

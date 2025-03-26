@@ -1,14 +1,9 @@
-﻿using Newtonsoft.Json;
-using System.Text.Json;
-
-namespace SolarSystemN9.Data.Entity
+﻿namespace SolarSystemN9.Data.Entity
 {
-    public class Moon : Bodies
+    public class Moon : CelestialBody
     {
-        [JsonProperty("moon")]
-        public new string? Name { get; set; }
+        public string? moon { get; set; }
 
-        [JsonProperty("rel")]
-        public string? Relationship { get; set; }
+        public string? rel { get; set; }
     }
 }

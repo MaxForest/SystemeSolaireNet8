@@ -6,7 +6,7 @@ namespace SolarSystemN9.Components.Pages.Galaxy;
 
 public partial class PagedGalaxy : ComponentBase
 {
-    public IQueryable<Bodies>? spaceEntities;
+    public IQueryable<CelestialBody>? CelestialBodies;
 
     [Inject]
     public SolarSystemService? SolarSystemService { get; set; }
@@ -18,6 +18,6 @@ public partial class PagedGalaxy : ComponentBase
             throw new InvalidOperationException("SolarSystemService is not initialized.");
         }
 
-        spaceEntities = await SolarSystemService.GetBodiesAsync();
+        CelestialBodies = await SolarSystemService.GetCelestialBodiesAsync();
     }
 }

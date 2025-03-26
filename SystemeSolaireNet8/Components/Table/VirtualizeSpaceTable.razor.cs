@@ -6,20 +6,20 @@ namespace SolarSystemN9.Components.Table;
 
 public partial class VirtualizeSpaceTable : ComponentBase
 {
-    private QuickGrid<Bodies>? grid;
-    private GridItemsProvider<Bodies>? itemsProvider;
+    private QuickGrid<CelestialBody>? grid;
+    private GridItemsProvider<CelestialBody>? itemsProvider;
     private int numResults;
     private string? nameSearch;
     private CancellationTokenSource? debounceCts;
 
     [Parameter]
-    public IQueryable<Bodies>? SpaceEntities { get; set; }
+    public IQueryable<CelestialBody>? CelestialBodies { get; set; }
 
     protected override void OnInitialized()
     {
         itemsProvider = async request =>
         {
-            GridItemsProviderResult<Bodies> result = await Task.Run(() => GetBodies(request, nameSearch));
+            GridItemsProviderResult<CelestialBody> result = await Task.Run(() => GetBodies(request, nameSearch));
 
             if (result.TotalItemCount != numResults && !request.CancellationToken.IsCancellationRequested)
             {
@@ -45,9 +45,9 @@ public partial class VirtualizeSpaceTable : ComponentBase
         });
     }
 
-    public GridItemsProviderResult<Bodies> GetBodies(GridItemsProviderRequest<Bodies> request, string? nameSearch)
+    public GridItemsProviderResult<CelestialBody> GetBodies(GridItemsProviderRequest<CelestialBody> request, string? nameSearch)
     {
-        IQueryable<Bodies>? bodies = SpaceEntities;
+        IQueryable<CelestialBody>? bodies = CelestialBodies;
 
         if (!string.IsNullOrEmpty(nameSearch))
         {
@@ -58,10 +58,10 @@ public partial class VirtualizeSpaceTable : ComponentBase
                         .Skip(request.StartIndex)
                         .Take(request.Count ?? 20);
 
-        return new GridItemsProviderResult<Bodies>
+        return new GridItemsProviderResult<CelestialBody>
         {
             Items = bodies?.ToList() ?? [],
-            TotalItemCount = SpaceEntities?.Count() ?? 0
+            TotalItemCount = CelestialBodies?.Count() ?? 0
         };
     }
 }

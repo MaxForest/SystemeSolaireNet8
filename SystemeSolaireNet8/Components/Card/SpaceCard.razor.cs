@@ -6,6 +6,6 @@ namespace SolarSystemN9.Components.Card
     public partial class SpaceCard
     {
         [Parameter, EditorRequired]
-        public Bodies Body { get; set; } = default!;
+        public CelestialBody Body { get; set; } = default!;
     }
 }

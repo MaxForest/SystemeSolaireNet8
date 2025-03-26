@@ -6,12 +6,12 @@ using System.Reflection;
 
 namespace SolarSystemN9.Components.Pages;
 
-public partial class Details : ComponentBase, IAsyncDisposable
+public partial class Details : ComponentBase
 {
     [Parameter]
     public string? Id { get; set; }
 
-    public Bodies? SpaceEntity;
+    public CelestialBody? CelestialBody;
 
     [Inject]
     public SolarSystemService? SolarSystemService { get; set; }
@@ -21,7 +21,7 @@ public partial class Details : ComponentBase, IAsyncDisposable
 
     private IJSObjectReference? jsModule;
 
-    protected PropertyInfo[]? spaceEntityProperties;
+    protected PropertyInfo[]? celestialBodyProperties;
 
     protected override async Task OnInitializedAsync()
     {
@@ -35,7 +35,7 @@ public partial class Details : ComponentBase, IAsyncDisposable
             throw new ArgumentException("Id parameter is required.");
         }
 
-        SpaceEntity = await SolarSystemService.GetEntity(Id) ?? throw new Exception("Entity not found.");
+        CelestialBody = await SolarSystemService.GetCelestialBody(Id) ?? throw new Exception("Entity not found.");
     }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
@@ -48,11 +48,11 @@ public partial class Details : ComponentBase, IAsyncDisposable
             }
         }
 
-        if (jsModule is not null && SpaceEntity is not null)
+        if (jsModule is not null && CelestialBody is not null)
         {
             double pow = Math.Pow(10, 6);
-            double semiminor = (SpaceEntity.SemimajorAxis * Math.Sqrt(1 - Math.Cbrt((double)SpaceEntity.Eccentricity))) / pow;
-            double semimajor = SpaceEntity.SemimajorAxis / pow;
+            double semiminor = (CelestialBody.SemimajorAxis * Math.Sqrt(1 - Math.Cbrt((double)CelestialBody.Eccentricity))) / pow;
+            double semimajor = CelestialBody.SemimajorAxis / pow;
 
             //double aphelion = SpaceEntity.Aphelion / pow;
             //double perihelion = SpaceEntity.Perihelion / pow;
@@ -63,19 +63,19 @@ public partial class Details : ComponentBase, IAsyncDisposable
 
     protected override void OnParametersSet()
     {
-        if (SpaceEntity != null)
+        if (CelestialBody != null)
         {
-            spaceEntityProperties = SpaceEntity.GetType().GetProperties();
+            celestialBodyProperties = CelestialBody.GetType().GetProperties();
         }
     }
 
-    public async ValueTask DisposeAsync()
-    {
-        if (jsModule is not null)
-        {
-            await jsModule.DisposeAsync();
-        }
+    //public async ValueTask DisposeAsync()
+    //{
+    //    if (jsModule is not null)
+    //    {
+    //        await jsModule.DisposeAsync();
+    //    }
 
-        GC.SuppressFinalize(this);
-    }
+    //    GC.SuppressFinalize(this);
+    //}
 }

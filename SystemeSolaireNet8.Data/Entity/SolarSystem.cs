@@ -1,6 +1,9 @@
-﻿namespace SolarSystemN9.Data.Entity;
+﻿using Newtonsoft.Json;
+
+namespace SolarSystemN9.Data.Entity;
 
 public class SolarSystem
 {
-    public Bodies[]? Bodies { get; set; }
+    [JsonProperty("bodies")]
+    public CelestialBody[]? Bodies { get; set; }
 }
