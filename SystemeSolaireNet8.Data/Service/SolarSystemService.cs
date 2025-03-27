@@ -1,7 +1,6 @@
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Logging;
 using SolarSystemN9.Data.Entity;
-using System;
 using System.Net.Http.Json;
 
 namespace SolarSystemN9.Data.Service;
@@ -11,14 +10,14 @@ public class SolarSystemService(IMemoryCache memoryCache, IHttpClientFactory htt
     private const string BodiesApiEndpoint = "https://api.le-systeme-solaire.net/rest/bodies";
     private readonly HttpClient _client = httpClientFactory.CreateClient();
 
-    public async Task<IQueryable<CelestialBody>?> GetCelestialBodiesAsync()
+    public async Task<IQueryable<CelestialBody>?> GetCelestialBodiesAsync(CancellationToken cancellationToken = default)
     {
         try
         {
             return await memoryCache.GetOrCreateAsync("SolarSystem", async cache =>
             {
-                return await GetSolarSystem(BodiesApiEndpoint);
-            });
+                return await GetSolarSystem(BodiesApiEndpoint, cancellationToken);
+            }).ConfigureAwait(false);
         }
         catch (HttpRequestException ex)
         {
@@ -32,11 +31,23 @@ public class SolarSystemService(IMemoryCache memoryCache, IHttpClientFactory htt
         }
     }
 
-    public async Task<IQueryable<CelestialBody>?> GetCelestialBodiesAsync(string query)
+    public async Task<IQueryable<CelestialBody>?> GetCelestialBodiesAsync(string query, CancellationToken cancellationToken = default)
+    {
+        if(string.IsNullOrEmpty(query))
+        {
+            return await GetCelestialBodiesAsync(cancellationToken);
+        }
+
+        return await GetSolarSystem($"{BodiesApiEndpoint}?filter[]=name,cs,{query}", cancellationToken);
+    }
+
+    private async Task<IQueryable<CelestialBody>?> GetSolarSystem(string requestUri, CancellationToken cancellationToken = default)
     {
         try
         {
-            return await GetSolarSystem($"{BodiesApiEndpoint}?filter[]=name,cs,{query}");
+            SolarSystem? solarSystem = await GetAsync<SolarSystem>(requestUri, cancellationToken);
+
+            return solarSystem?.Bodies?.AsQueryable();
         }
         catch (HttpRequestException ex)
         {
@@ -50,69 +61,68 @@ public class SolarSystemService(IMemoryCache memoryCache, IHttpClientFactory htt
         }
     }
 
-    private async Task<IQueryable<CelestialBody>?> GetSolarSystem(string requestUri)
-    {
-        HttpResponseMessage response = await _client.GetAsync(requestUri).ConfigureAwait(false);
-        response.EnsureSuccessStatusCode();
-
-        SolarSystem? solarSystem = await response.Content.ReadFromJsonAsync<SolarSystem>().ConfigureAwait(false);
-        return solarSystem?.Bodies?.AsQueryable();
-    }
-
-    public async Task<CelestialBody?> GetCelestialBody(string id)
+    public async Task<CelestialBody?> GetCelestialBody(string id, CancellationToken cancellationToken = default)
     {
         try
         {
-            //return await memoryCache.GetOrCreateAsync(id, async cache =>
-            //{
-            HttpResponseMessage response = await _client.GetAsync($"{BodiesApiEndpoint}/{id}").ConfigureAwait(false);
-            response.EnsureSuccessStatusCode();
+            return await memoryCache.GetOrCreateAsync(id, async cache =>
+            {
+                CelestialBody? celestialBody = await GetAsync<CelestialBody>($"{BodiesApiEndpoint}/{id}");
 
-            CelestialBody? celestialBody = await response.Content.ReadFromJsonAsync<CelestialBody>().ConfigureAwait(false);
+                if (celestialBody == null)
+                    return null;
 
-            if (celestialBody == null)
-                return null;
+                await LoadMoons(celestialBody, cancellationToken);
+                await LoadAroundPlanet(celestialBody, cancellationToken);
 
-            await LoadMoons(celestialBody);
-            await LoadAroundPlanet(celestialBody);
-
-            return celestialBody;
-            //});
+                return celestialBody;
+            }).ConfigureAwait(false);
         }
-        catch (Exception)
+        catch (Exception e)
         {
-            // Log the exception (logging mechanism not shown here)
+            logger.LogError(e, "An unexpected error occurred.");
             return null;
         }
     }
 
-    private async Task LoadMoons(CelestialBody spaceEntity)
+    private async Task<T?> GetAsync<T>(string? uri, CancellationToken cancellationToken = default) where T : class
+    {
+        try
+        {
+            HttpResponseMessage response = await _client.GetAsync(uri, cancellationToken).ConfigureAwait(false);
+            response.EnsureSuccessStatusCode();
+
+            return await response.Content.ReadFromJsonAsync<T>(cancellationToken).ConfigureAwait(false);
+        }
+        catch (Exception e)
+        {
+            logger.LogError(e, "An unexpected error occurred.");
+            return null;
+        }
+    }
+
+    private async Task LoadMoons(CelestialBody spaceEntity, CancellationToken cancellationToken = default)
     {
         if (spaceEntity?.Moons?.Length > 0)
         {
-            foreach ((int index, Moon m) in spaceEntity.Moons.Index()) 
+            IEnumerable<Task> moonTasks = spaceEntity.Moons.Select(async (m, index) =>
             {
-                HttpResponseMessage response = await _client.GetAsync(m.rel).ConfigureAwait(false);
-                response.EnsureSuccessStatusCode();
-
-                Moon? moon = await response.Content.ReadFromJsonAsync<Moon>().ConfigureAwait(false);
-
+                Moon? moon = await GetAsync<Moon>(m.rel, cancellationToken).ConfigureAwait(false);
                 if (moon != null)
                 {
                     spaceEntity.Moons[index] = moon;
                 }
-            }
+            });
+
+            await Task.WhenAll(moonTasks).ConfigureAwait(false);
         }
     }
 
-    private async Task LoadAroundPlanet(CelestialBody spaceEntity)
+    private async Task LoadAroundPlanet(CelestialBody spaceEntity, CancellationToken cancellationToken = default)
     {
         if (spaceEntity?.AroundPlanet != null)
         {
-            HttpResponseMessage response = await _client.GetAsync(spaceEntity.AroundPlanet.rel).ConfigureAwait(false);
-            response.EnsureSuccessStatusCode();
-
-            spaceEntity.AroundPlanet = await response.Content.ReadFromJsonAsync<Planet>().ConfigureAwait(false);
+            spaceEntity.AroundPlanet = await GetAsync<Planet>(spaceEntity.AroundPlanet.rel, cancellationToken);
         }
     }
 }
